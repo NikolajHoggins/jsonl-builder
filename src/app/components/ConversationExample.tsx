@@ -11,13 +11,14 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Copy } from "lucide-react";
 
 const ConversationExample: React.FC<ConversationExampleProps> = ({
   id,
   messages,
   onUpdate,
   onDelete,
+  onDuplicate,
 }) => {
   const addMessage = () => {
     const newMessages = [...messages, { role: "user" as const, content: "" }];
@@ -43,15 +44,26 @@ const ConversationExample: React.FC<ConversationExampleProps> = ({
     <Card className="shadow-md">
       <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
         <CardTitle className="text-lg font-medium">Example #{id + 1}</CardTitle>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => onDelete(id)}
-          className="h-8 w-8 text-destructive"
-          aria-label="Delete example"
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
+        <div className="flex gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onDuplicate && onDuplicate(id, messages)}
+            className="h-8 w-8 text-primary"
+            aria-label="Duplicate example"
+          >
+            <Copy className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onDelete(id)}
+            className="h-8 w-8 text-destructive"
+            aria-label="Delete example"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
       </CardHeader>
 
       <CardContent className="space-y-4">

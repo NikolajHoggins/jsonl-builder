@@ -8,6 +8,7 @@ export type ConversationExampleProps = {
   messages: MessageType[];
   onUpdate: (id: number, messages: MessageType[]) => void;
   onDelete: (id: number) => void;
+  onDuplicate?: (id: number, messages: MessageType[]) => void;
 };
 
 export interface MessageProps {

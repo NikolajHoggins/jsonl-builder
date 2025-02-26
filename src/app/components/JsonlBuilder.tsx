@@ -68,6 +68,27 @@ const JsonlBuilder: React.FC = () => {
     setExamples(examples.filter((example) => example.id !== id));
   };
 
+  const duplicateExample = (id: number, messages: MessageType[]) => {
+    const newId =
+      examples.length > 0 ? Math.max(...examples.map((e) => e.id)) + 1 : 0;
+
+    // Create a deep copy of the messages
+    const messagesCopy = JSON.parse(JSON.stringify(messages));
+
+    // Find the index of the example to duplicate
+    const exampleIndex = examples.findIndex((example) => example.id === id);
+
+    // Insert the new example after the original
+    const newExamples = [...examples];
+    newExamples.splice(exampleIndex + 1, 0, {
+      id: newId,
+      messages: messagesCopy,
+    });
+
+    setExamples(newExamples);
+    toast.success("Example duplicated");
+  };
+
   const downloadJsonl = () => {
     if (!jsonlOutput) return;
 
@@ -115,6 +136,7 @@ const JsonlBuilder: React.FC = () => {
             messages={example.messages}
             onUpdate={updateExample}
             onDelete={deleteExample}
+            onDuplicate={duplicateExample}
           />
         ))}
       </div>
