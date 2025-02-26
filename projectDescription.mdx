@@ -1,0 +1,8 @@
+The app should output final format as VALID jsonl. Like the following example:
+{"messages": [{role: "user", content: "user content"}, {role: "system", content: "system response"}]}
+{"messages": [{role: "user", content: "user content"}, {role: "system", content: "system response"}]}
+
+The webapp will be a UI with input fields for message to build out the jsonl.
+
+- It should allow adding new examples for the AI into the jsonl. Which is done by adding a new line.
+- It should allow adding more messages to an example by clicking a plus. Each message should then have a dropdown for wether the role is "user", "developer" or "assistant"

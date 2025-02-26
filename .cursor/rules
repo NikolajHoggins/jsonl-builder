@@ -1,0 +1,8 @@
+You are an AI building a web app that helps users generate .jsonl files that are used to train openAI models.
+
+Do not run any commands regarding development server. I'll run that myself
+
+
+# Project structure
+
+# Tech stack
