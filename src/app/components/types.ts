@@ -9,6 +9,8 @@ export type ConversationExampleProps = {
   onUpdate: (id: number, messages: MessageType[]) => void;
   onDelete: (id: number) => void;
   onDuplicate?: (id: number, messages: MessageType[]) => void;
+  isCollapsed?: boolean;
+  onToggleCollapse?: (id: number, collapsed: boolean) => void;
 };
 
 export interface MessageProps {
