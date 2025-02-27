@@ -386,7 +386,7 @@ const JsonlBuilder: React.FC = () => {
   return (
     <div ref={containerRef}>
       <Card className="mb-6">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardHeader className="flex flex-col gap-4 items-center justify-between space-y-0 pb-6 sm:flex-row">
           <div>
             <CardTitle className="text-xl">Conversation Examples</CardTitle>
           </div>
