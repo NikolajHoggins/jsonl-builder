@@ -5,15 +5,7 @@ import ConversationExample from "./ConversationExample";
 import { MessageType } from "./types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Plus,
-  Copy,
-  Download,
-  Upload,
-  FileUp,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
+import { Plus, Copy, Download, Upload, FileUp } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -92,7 +84,6 @@ const JsonlBuilder: React.FC = () => {
   const [collapsedExamples, setCollapsedExamples] = useState<
     Record<number, boolean>
   >({});
-  const [allCollapsed, setAllCollapsed] = useState(false);
 
   // For performance optimization with large lists
   const [visibleRange, setVisibleRange] = useState({ start: 0, end: 20 });
@@ -259,21 +250,6 @@ const JsonlBuilder: React.FC = () => {
     }));
   }, []);
 
-  const toggleCollapseAll = useCallback(() => {
-    setAllCollapsed((prev) => {
-      const newCollapsedState = !prev;
-
-      // Create a new object with all examples set to the new state
-      const newCollapsedExamples: Record<number, boolean> = {};
-      examples.forEach((example) => {
-        newCollapsedExamples[example.id] = newCollapsedState;
-      });
-
-      setCollapsedExamples(newCollapsedExamples);
-      return newCollapsedState;
-    });
-  }, [examples]);
-
   const downloadJsonl = useCallback(() => {
     if (!jsonlOutput) return;
 
@@ -415,27 +391,6 @@ const JsonlBuilder: React.FC = () => {
             <CardTitle className="text-xl">Conversation Examples</CardTitle>
           </div>
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={toggleCollapseAll}
-              className="flex items-center gap-1"
-              aria-label={
-                allCollapsed ? "Expand all examples" : "Collapse all examples"
-              }
-            >
-              {allCollapsed ? (
-                <>
-                  <ChevronDown className="h-4 w-4" />
-                  Expand All
-                </>
-              ) : (
-                <>
-                  <ChevronUp className="h-4 w-4" />
-                  Collapse All
-                </>
-              )}
-            </Button>
             <Button
               variant="outline"
               size="sm"
