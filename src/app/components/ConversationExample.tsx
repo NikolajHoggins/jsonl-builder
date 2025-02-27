@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback, memo } from "react";
 import Message from "./Message";
 import { MessageType, ConversationExampleProps } from "./types";
 import {
@@ -60,28 +60,35 @@ const ConversationExample: React.FC<ConversationExampleProps> = ({
     }
   }, [isEditingTitle]);
 
-  const addMessage = () => {
+  // Memoize callback functions to prevent unnecessary re-renders
+  const addMessage = useCallback(() => {
     const newMessages = [...messages, { role: "user" as const, content: "" }];
     onUpdate(id, newMessages);
-  };
+  }, [id, messages, onUpdate]);
 
-  const updateMessage = (index: number, updatedMessage: MessageType) => {
-    const newMessages = [...messages];
-    newMessages[index] = updatedMessage;
-    onUpdate(id, newMessages);
-  };
+  const updateMessage = useCallback(
+    (index: number, updatedMessage: MessageType) => {
+      const newMessages = [...messages];
+      newMessages[index] = updatedMessage;
+      onUpdate(id, newMessages);
+    },
+    [id, messages, onUpdate]
+  );
 
-  const deleteMessage = (index: number) => {
-    if (messages.length <= 1) {
-      // Don't allow deleting the last message
-      return;
-    }
-    const newMessages = messages.filter((_, i) => i !== index);
-    onUpdate(id, newMessages);
-  };
+  const deleteMessage = useCallback(
+    (index: number) => {
+      if (messages.length <= 1) {
+        // Don't allow deleting the last message
+        return;
+      }
+      const newMessages = messages.filter((_, i) => i !== index);
+      onUpdate(id, newMessages);
+    },
+    [id, messages, onUpdate]
+  );
 
   // Get a summary of the example for the collapsed view
-  const getSummary = () => {
+  const getSummary = useCallback(() => {
     const messageCount = messages.length;
     const firstMessage = messages[0]?.content || "";
     const truncatedContent =
@@ -92,35 +99,67 @@ const ConversationExample: React.FC<ConversationExampleProps> = ({
     return `${messageCount} message${
       messageCount !== 1 ? "s" : ""
     } - ${truncatedContent}`;
-  };
+  }, [messages]);
 
-  const toggleCollapse = () => {
+  const toggleCollapse = useCallback(() => {
     const newCollapsedState = !localCollapsed;
     setLocalCollapsed(newCollapsedState);
     if (onToggleCollapse) {
       onToggleCollapse(id, newCollapsedState);
     }
-  };
+  }, [id, localCollapsed, onToggleCollapse]);
 
-  const startEditingTitle = () => {
+  const startEditingTitle = useCallback(() => {
     setIsEditingTitle(true);
-  };
+  }, []);
 
-  const saveTitle = () => {
+  const saveTitle = useCallback(() => {
     setIsEditingTitle(false);
     if (onTitleChange && localTitle.trim() !== "") {
       onTitleChange(id, localTitle);
     }
-  };
+  }, [id, localTitle, onTitleChange]);
 
-  const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      saveTitle();
-    } else if (e.key === "Escape") {
-      setIsEditingTitle(false);
-      setLocalTitle(title || `Example ${id + 1}`);
+  const handleTitleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") {
+        saveTitle();
+      } else if (e.key === "Escape") {
+        setIsEditingTitle(false);
+        setLocalTitle(title || `Example ${id + 1}`);
+      }
+    },
+    [id, saveTitle, title]
+  );
+
+  const handleTitleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setLocalTitle(e.target.value);
+    },
+    []
+  );
+
+  const handleDuplicate = useCallback(() => {
+    if (onDuplicate) {
+      onDuplicate(id, messages);
     }
-  };
+  }, [id, messages, onDuplicate]);
+
+  const handleDelete = useCallback(() => {
+    onDelete(id);
+  }, [id, onDelete]);
+
+  // Optimize rendering of messages list
+  const messagesList = messages.map((message, index) => (
+    <Message
+      key={`${id}-message-${index}`}
+      message={message}
+      onUpdate={(updatedMessage: MessageType) =>
+        updateMessage(index, updatedMessage)
+      }
+      onDelete={() => deleteMessage(index)}
+    />
+  ));
 
   return (
     <Card className="shadow-md">
@@ -145,7 +184,7 @@ const ConversationExample: React.FC<ConversationExampleProps> = ({
               <Input
                 ref={titleInputRef}
                 value={localTitle}
-                onChange={(e) => setLocalTitle(e.target.value)}
+                onChange={handleTitleChange}
                 onKeyDown={handleTitleKeyDown}
                 onBlur={saveTitle}
                 className="h-8 w-[200px] text-lg font-medium"
@@ -188,7 +227,7 @@ const ConversationExample: React.FC<ConversationExampleProps> = ({
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => onDuplicate && onDuplicate(id, messages)}
+            onClick={handleDuplicate}
             className="h-8 w-8 text-primary"
             aria-label="Duplicate example"
           >
@@ -197,7 +236,7 @@ const ConversationExample: React.FC<ConversationExampleProps> = ({
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => onDelete(id)}
+            onClick={handleDelete}
             className="h-8 w-8 text-destructive"
             aria-label="Delete example"
           >
@@ -207,33 +246,46 @@ const ConversationExample: React.FC<ConversationExampleProps> = ({
       </CardHeader>
 
       <div className={cn(localCollapsed && "hidden")}>
-        <CardContent className="space-y-4">
-          {messages.map((message, index) => (
-            <Message
-              key={index}
-              message={message}
-              onUpdate={(updatedMessage: MessageType) =>
-                updateMessage(index, updatedMessage)
-              }
-              onDelete={() => deleteMessage(index)}
-            />
-          ))}
-        </CardContent>
+        {!localCollapsed && (
+          <>
+            <CardContent className="space-y-4">{messagesList}</CardContent>
 
-        <CardFooter>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={addMessage}
-            className="flex items-center gap-1"
-          >
-            <Plus className="h-4 w-4" />
-            Add Message
-          </Button>
-        </CardFooter>
+            <CardFooter>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={addMessage}
+                className="flex items-center gap-1"
+              >
+                <Plus className="h-4 w-4" />
+                Add Message
+              </Button>
+            </CardFooter>
+          </>
+        )}
       </div>
     </Card>
   );
 };
 
-export default ConversationExample;
+// Custom equality function to prevent unnecessary re-renders
+function arePropsEqual(
+  prevProps: ConversationExampleProps,
+  nextProps: ConversationExampleProps
+) {
+  return (
+    (prevProps.id === nextProps.id &&
+      prevProps.title === nextProps.title &&
+      prevProps.isCollapsed === nextProps.isCollapsed &&
+      prevProps.messages === nextProps.messages) ||
+    (prevProps.messages.length === nextProps.messages.length &&
+      prevProps.messages.every(
+        (msg, i) =>
+          msg.role === nextProps.messages[i].role &&
+          msg.content === nextProps.messages[i].content
+      ))
+    // We intentionally don't compare function references
+  );
+}
+
+export default memo(ConversationExample, arePropsEqual);

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { memo } from "react";
 import { MessageType, MessageProps } from "./types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -71,4 +71,14 @@ const Message: React.FC<MessageProps> = ({ message, onUpdate, onDelete }) => {
   );
 };
 
-export default Message;
+// Custom equality function to prevent unnecessary re-renders
+function arePropsEqual(prevProps: MessageProps, nextProps: MessageProps) {
+  return (
+    prevProps.message.role === nextProps.message.role &&
+    prevProps.message.content === nextProps.message.content
+    // We intentionally don't compare function references (onUpdate, onDelete)
+    // as they might change on parent re-renders but don't affect this component's output
+  );
+}
+
+export default memo(Message, arePropsEqual);
