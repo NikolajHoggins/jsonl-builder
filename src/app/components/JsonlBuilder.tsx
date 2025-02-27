@@ -37,6 +37,7 @@ import {
 type Example = {
   id: number;
   messages: MessageType[];
+  title?: string;
 };
 
 type ImportMode = "overwrite" | "append";
@@ -53,6 +54,7 @@ const JsonlBuilder: React.FC = () => {
     {
       id: 0,
       messages: [{ role: "user", content: "" }],
+      title: "Example 1",
     },
   ]);
   const [jsonlOutput, setJsonlOutput] = useState<string>("");
@@ -75,6 +77,7 @@ const JsonlBuilder: React.FC = () => {
         }
 
         return JSON.stringify({
+          title: example.title || `Example ${example.id + 1}`,
           messages: example.messages.map((msg) => ({
             role: msg.role,
             content: msg.content,
@@ -95,6 +98,7 @@ const JsonlBuilder: React.FC = () => {
       {
         id: newId,
         messages: [{ role: "user", content: "" }],
+        title: `Example ${newId + 1}`,
       },
     ]);
   };
@@ -103,6 +107,14 @@ const JsonlBuilder: React.FC = () => {
     setExamples(
       examples.map((example) =>
         example.id === id ? { ...example, messages } : example
+      )
+    );
+  };
+
+  const updateExampleTitle = (id: number, title: string) => {
+    setExamples(
+      examples.map((example) =>
+        example.id === id ? { ...example, title } : example
       )
     );
   };
@@ -124,12 +136,16 @@ const JsonlBuilder: React.FC = () => {
 
     // Find the index of the example to duplicate
     const exampleIndex = examples.findIndex((example) => example.id === id);
+    const originalExample = examples[exampleIndex];
 
     // Insert the new example after the original
     const newExamples = [...examples];
     newExamples.splice(exampleIndex + 1, 0, {
       id: newId,
       messages: messagesCopy,
+      title: `${
+        originalExample.title || `Example ${originalExample.id + 1}`
+      } (Copy)`,
     });
 
     setExamples(newExamples);
@@ -241,9 +257,11 @@ const JsonlBuilder: React.FC = () => {
 
             if (validMessages.length > 0) {
               parsedExamples.push({
-                id: nextId++,
+                id: nextId,
                 messages: validMessages as MessageType[],
+                title: parsed.title || `Example ${nextId + 1}`,
               });
+              nextId++;
             }
           }
         } catch (lineError) {
@@ -406,9 +424,11 @@ const JsonlBuilder: React.FC = () => {
             key={example.id}
             id={example.id}
             messages={example.messages}
+            title={example.title}
             onUpdate={updateExample}
             onDelete={deleteExample}
             onDuplicate={duplicateExample}
+            onTitleChange={updateExampleTitle}
             isCollapsed={collapsedExamples[example.id]}
             onToggleCollapse={handleToggleCollapse}
           />

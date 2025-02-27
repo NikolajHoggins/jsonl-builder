@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Message from "./Message";
 import { MessageType, ConversationExampleProps } from "./types";
 import {
@@ -11,19 +11,33 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Copy, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  Copy,
+  ChevronDown,
+  ChevronUp,
+  Pencil,
+  Check,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
 
 const ConversationExample: React.FC<ConversationExampleProps> = ({
   id,
   messages,
+  title,
   onUpdate,
   onDelete,
   onDuplicate,
+  onTitleChange,
   isCollapsed,
   onToggleCollapse,
 }) => {
   const [localCollapsed, setLocalCollapsed] = useState(isCollapsed || false);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [localTitle, setLocalTitle] = useState(title || `Example ${id + 1}`);
+  const titleInputRef = useRef<HTMLInputElement>(null);
 
   // Update local state when prop changes
   useEffect(() => {
@@ -31,6 +45,20 @@ const ConversationExample: React.FC<ConversationExampleProps> = ({
       setLocalCollapsed(isCollapsed);
     }
   }, [isCollapsed]);
+
+  // Update local title when prop changes
+  useEffect(() => {
+    if (title) {
+      setLocalTitle(title);
+    }
+  }, [title]);
+
+  // Focus the input when editing starts
+  useEffect(() => {
+    if (isEditingTitle && titleInputRef.current) {
+      titleInputRef.current.focus();
+    }
+  }, [isEditingTitle]);
 
   const addMessage = () => {
     const newMessages = [...messages, { role: "user" as const, content: "" }];
@@ -74,6 +102,26 @@ const ConversationExample: React.FC<ConversationExampleProps> = ({
     }
   };
 
+  const startEditingTitle = () => {
+    setIsEditingTitle(true);
+  };
+
+  const saveTitle = () => {
+    setIsEditingTitle(false);
+    if (onTitleChange && localTitle.trim() !== "") {
+      onTitleChange(id, localTitle);
+    }
+  };
+
+  const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      saveTitle();
+    } else if (e.key === "Escape") {
+      setIsEditingTitle(false);
+      setLocalTitle(title || `Example ${id + 1}`);
+    }
+  };
+
   return (
     <Card className="shadow-md">
       <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
@@ -91,9 +139,45 @@ const ConversationExample: React.FC<ConversationExampleProps> = ({
               <ChevronUp className="h-4 w-4" />
             )}
           </Button>
-          <CardTitle className="text-lg font-medium">
-            Example #{id + 1}
-          </CardTitle>
+
+          {isEditingTitle ? (
+            <div className="flex items-center gap-1">
+              <Input
+                ref={titleInputRef}
+                value={localTitle}
+                onChange={(e) => setLocalTitle(e.target.value)}
+                onKeyDown={handleTitleKeyDown}
+                onBlur={saveTitle}
+                className="h-8 w-[200px] text-lg font-medium"
+                aria-label="Edit example title"
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={saveTitle}
+                className="h-8 w-8"
+                aria-label="Save title"
+              >
+                <Check className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1">
+              <CardTitle className="text-lg font-medium">
+                {localTitle}
+              </CardTitle>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={startEditingTitle}
+                className="h-6 w-6 opacity-50 hover:opacity-100"
+                aria-label="Edit title"
+              >
+                <Pencil className="h-3 w-3" />
+              </Button>
+            </div>
+          )}
+
           {localCollapsed && (
             <span className="text-sm text-muted-foreground ml-2">
               {getSummary()}
