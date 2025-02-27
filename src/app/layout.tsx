@@ -27,7 +27,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <Script
-        data-domain="hoggins.io"
+        data-domain="jsonl-builder.com"
         src="https://plausible.io/js/script.js"
         strategy="afterInteractive"
       />
