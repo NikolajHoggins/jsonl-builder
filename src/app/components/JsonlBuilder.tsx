@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { trackEvent } from "@/lib/utils";
 
 type Example = {
   id: number;
@@ -157,14 +158,20 @@ const JsonlBuilder: React.FC = () => {
   const addExample = useCallback(() => {
     const newId =
       examples.length > 0 ? Math.max(...examples.map((e) => e.id)) + 1 : 0;
-    setExamples((prevExamples) => [
-      ...prevExamples,
-      {
-        id: newId,
-        messages: [{ role: "user", content: "" }],
-        title: `Example ${newId + 1}`,
-      },
-    ]);
+
+    const newExample: Example = {
+      id: newId,
+      messages: [{ role: "user" as const, content: "" }],
+      title: `Example ${newId + 1}`,
+    };
+
+    setExamples((prevExamples) => [...prevExamples, newExample]);
+
+    // Track the event with Plausible
+    trackEvent("add_conversation_example", {
+      exampleId: newId,
+      totalExamples: examples.length + 1,
+    });
 
     // Ensure the new example is visible
     setVisibleRange((prev) => ({

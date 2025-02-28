@@ -28,7 +28,7 @@ export default function RootLayout({
     <html lang="en">
       <Script
         data-domain="jsonl-builder.com"
-        src="https://plausible.io/js/script.js"
+        src="https://plausible.io/js/script.tagged-events.js"
         strategy="afterInteractive"
       />
       <body
