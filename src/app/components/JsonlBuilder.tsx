@@ -245,6 +245,13 @@ const JsonlBuilder: React.FC = () => {
         [examples.length]: prev[id] || false,
       }));
 
+      // Track the duplicate event with Plausible
+      trackEvent("duplicate_conversation_example", {
+        originalExampleId: id,
+        messageCount: messages.length,
+        totalExamples: examples.length + 1,
+      });
+
       toast.success("Example duplicated");
     },
     [examples.length]
@@ -270,21 +277,39 @@ const JsonlBuilder: React.FC = () => {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
+    // Track the download event with Plausible
+    trackEvent("download_jsonl", {
+      exampleCount: examples.length,
+      validExampleCount: examples.filter((example) =>
+        example.messages.some((msg) => msg.content.trim() !== "")
+      ).length,
+      byteSize: new Blob([jsonlOutput]).size,
+    });
+
     toast.success("JSONL file downloaded successfully");
-  }, [jsonlOutput]);
+  }, [jsonlOutput, examples]);
 
   const copyToClipboard = useCallback(() => {
     if (!jsonlOutput) return;
     navigator.clipboard
       .writeText(jsonlOutput)
       .then(() => {
+        // Track the copy event with Plausible
+        trackEvent("copy_jsonl_to_clipboard", {
+          exampleCount: examples.length,
+          validExampleCount: examples.filter((example) =>
+            example.messages.some((msg) => msg.content.trim() !== "")
+          ).length,
+          byteSize: new Blob([jsonlOutput]).size,
+        });
+
         toast.success("JSONL copied to clipboard");
       })
       .catch((err) => {
         console.error("Failed to copy: ", err);
         toast.error("Failed to copy to clipboard");
       });
-  }, [jsonlOutput]);
+  }, [jsonlOutput, examples]);
 
   const handleFileUpload = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -360,6 +385,16 @@ const JsonlBuilder: React.FC = () => {
           toast.error("No valid examples found in the imported content");
           return prevExamples;
         }
+
+        // Track the import event with Plausible
+        trackEvent("import_conversation_examples", {
+          importMode,
+          exampleCount: parsedExamples.length,
+          totalExamplesAfterImport:
+            importMode === "overwrite"
+              ? parsedExamples.length
+              : prevExamples.length + parsedExamples.length,
+        });
 
         // Update the examples based on the import mode
         if (importMode === "overwrite") {
